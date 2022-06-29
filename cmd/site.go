@@ -22,40 +22,34 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/rbraddev/holly/internal/hosts"
 	"github.com/spf13/cobra"
 )
 
-// siteCmd represents the site command
-var siteCmd = &cobra.Command{
-	Use:   "site",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+var site string
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+var sitesCmd = &cobra.Command{
+	Use:   "sites",
+	Short: "Site specific commands",
+
 	Run: func(cmd *cobra.Command, args []string) {
-		var hl hosts.HostList
-		hl.LoadFile("hosts")
-		fmt.Println(hl)
+		sp := hosts.SearchParams{
+			Site:   []string{"123", "124"},
+			Device: []string{"sw"},
+		}
+
+		hosts.LoadSolarwindsHosts(sp)
 
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(siteCmd)
+	rootCmd.AddCommand(sitesCmd)
 
-	// Here you will define your flags and configuration settings.
+	sitesCmd.Flags().Bool("enable", false, "Enable site")
+	sitesCmd.Flags().Bool("disable", false, "Disable site")
+	sitesCmd.Flags().Bool("check", false, "Check site current status")
+	sitesCmd.Flags().StringVar(&site, "site", "", "Site number")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// siteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// siteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	sitesCmd.MarkFlagRequired("site")
 }
