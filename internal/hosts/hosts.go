@@ -1,6 +1,16 @@
 package hosts
 
-import "fmt"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
+var (
+	ErrInvalidSearchType = errors.New("invalid search type")
+	ErrSiteRequired      = errors.New("site required")
+)
 
 type HostList struct {
 	Hosts []Host
@@ -13,41 +23,98 @@ type Host struct {
 }
 
 type SearchParams struct {
-	Site     []string
-	Device   []string
-	Hostname []string
-	Ip       []string
+	SearchType string
+	Sites      []string
+	Devices    []string
+	Hostnames  []string
+	Ips        []string
 }
 
-func (sp *SearchParams) constructQuery() string {
-	where := "WHERE "
-	params := make(map[string]any)
+var constructorFuncs = map[string]func(sp SearchParams) (map[string]interface{}, error){
+	"siteSearch": siteSearch,
+}
 
-	if len(sp.Site) > 0 && len(sp.Device) > 0 {
-		for i, s := range sp.Site {
-			for _, d := range sp.Device {
-				id := fmt.Sprint(('a' + (i - 1)))
-				params[id] = fmt.Sprintf("%s%s%%", d, s)
-				for k := range params {
-					where += fmt.Sprintf("NodeName LIKE @%s OR ", k)
-				}
+func siteSearch(sp SearchParams) (map[string]interface{}, error) {
+	if len(sp.Sites) == 0 {
+		return map[string]interface{}{}, ErrSiteRequired
+	}
+
+	where := "WHERE "
+	params := make(map[string]interface{})
+	if len(sp.Sites) > 0 && len(sp.Devices) > 0 {
+		id := int('a')
+		for _, s := range sp.Sites {
+			for _, d := range sp.Devices {
+				key := fmt.Sprintf("%c", id)
+				params[key] = fmt.Sprintf("%s%s%%", d, s)
+				where += fmt.Sprintf("NodeName LIKE @%s OR ", key)
+				id = id + 1
 			}
 		}
 	}
 
-	fmt.Println(params)
+	if where[len(where)-4:] == " OR " {
+		where = where[:len(where)-4]
+	}
 
-	return fmt.Sprintf(`
-		SELECT NodeID as nodeid, IPAddress as ip, NodeName as hostname
-		FROM Orion.Nodes
-		%s
-	`, where)
+	data := map[string]interface{}{
+		"query":  fmt.Sprintf(`SELECT IPAddress as ip, NodeName as hostname FROM Orion.Nodes %s`, where),
+		"params": params,
+	}
+
+	return data, nil
 }
 
-func LoadSolarwindsHosts(sp SearchParams) {
-	query := sp.constructQuery()
-	fmt.Println(query)
+func (sp *SearchParams) constructQuery() (map[string]interface{}, error) {
+	cf, ok := constructorFuncs[sp.SearchType]
+	if !ok {
+		return map[string]interface{}{}, ErrInvalidSearchType
+	}
+
+	query, err := cf(*sp)
+	if err != nil {
+		return map[string]interface{}{}, err
+	}
+
+	return query, nil
 }
+
+func getSolarwindsHosts(query map[string]interface{}) (HostList, error) {
+	queryJson, err := json.Marshal(query)
+	if err != nil {
+		return HostList{}, err
+	}
+
+	requestBody := bytes.NewBuffer(queryJson)
+
+	fmt.Println(requestBody)
+
+	return HostList{}, nil
+}
+
+func NewSolarwindsHosts(sp SearchParams) (HostList, error) {
+	query, err := sp.constructQuery()
+	if err != nil {
+		return HostList{}, err
+	}
+
+	hl, err := getSolarwindsHosts(query)
+	if err != nil {
+		return HostList{}, err
+	}
+	// hl := HostList{
+	// 	Hosts: []Host{
+	// 		{ip: "10.0.0.1", hostname: "test1", platform: "ios"},
+	// 		{ip: "10.0.0.2", hostname: "test2", platform: "ios"},
+	// 	},
+	// }
+
+	return hl, nil
+}
+
+// func (h *Host) enableDisableSite(enable bool) error {
+
+// }
 
 // func (hl *HostList) LoadFile(hostsFile string) error {
 // 	f, err := os.Open(hostsFile)

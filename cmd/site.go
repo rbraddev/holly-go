@@ -22,24 +22,49 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/rbraddev/holly/internal/hosts"
 	"github.com/spf13/cobra"
 )
-
-var site string
 
 var sitesCmd = &cobra.Command{
 	Use:   "sites",
 	Short: "Site specific commands",
 
-	Run: func(cmd *cobra.Command, args []string) {
-		sp := hosts.SearchParams{
-			Site:   []string{"123", "124"},
-			Device: []string{"sw"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		sites, err := cmd.Flags().GetStringSlice("sites")
+		if err != nil {
+			return err
 		}
 
-		hosts.LoadSolarwindsHosts(sp)
+		enable, err := cmd.Flags().GetBool("enable")
+		if err != nil {
+			return err
+		}
 
+		disable, err := cmd.Flags().GetBool("disable")
+		if err != nil {
+			return err
+		}
+
+		// check, err := cmd.Flags().GetBool("check")
+		// if err != nil {
+		// 	return err
+		// }
+
+		if enable || disable {
+			// if len(sites) > 1 {
+			// 	return fmt.Errorf("only one side can be enabled or disabled at a time")
+			// }
+
+			err := enableDisableSiteAction(sites, enable)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 	},
 }
 
@@ -49,7 +74,23 @@ func init() {
 	sitesCmd.Flags().Bool("enable", false, "Enable site")
 	sitesCmd.Flags().Bool("disable", false, "Disable site")
 	sitesCmd.Flags().Bool("check", false, "Check site current status")
-	sitesCmd.Flags().StringVar(&site, "site", "", "Site number")
+	sitesCmd.Flags().StringSlice("sites", []string{}, "Site number(s) (comma separated - 123,124)")
 
-	sitesCmd.MarkFlagRequired("site")
+	sitesCmd.MarkFlagRequired("sites")
+}
+
+func enableDisableSiteAction(sites []string, enable bool) error {
+	sp := hosts.SearchParams{
+		SearchType: "siteSearch",
+		Sites:      sites,
+		Devices:    []string{"sw", "rt"},
+	}
+	hl, err := hosts.NewSolarwindsHosts(sp)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(hl)
+
+	return nil
 }
