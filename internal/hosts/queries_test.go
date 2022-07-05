@@ -12,8 +12,8 @@ func TestNewConstructor(t *testing.T) {
 	testCases := []struct {
 		name       string
 		searchtype string
-		wantFunc   func(i SWInv) (map[string]interface{}, error)
-		wantErr    error
+		expFunc    func(i SWInv) (map[string]interface{}, error)
+		expErr     error
 	}{
 		{"SiteSearch", "site", siteSearch, nil},
 		{"NullSearch", "", nil, fmt.Errorf("search type required")},
@@ -24,11 +24,11 @@ func TestNewConstructor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cf, err := newConstructor(tc.searchtype)
 
-			assert.Equal(t, reflect.ValueOf(cf), reflect.ValueOf(tc.wantFunc))
-			if tc.wantErr == nil {
+			assert.Equal(t, fmt.Sprintf("%v", reflect.TypeOf(cf)), fmt.Sprintf("%v", reflect.TypeOf(tc.expFunc)))
+			if tc.expErr == nil {
 				assert.NilError(t, err)
 			} else {
-				assert.ExpError(t, tc.wantErr)
+				assert.ExpError(t, tc.expErr)
 			}
 		})
 	}
@@ -36,11 +36,11 @@ func TestNewConstructor(t *testing.T) {
 
 func TestSiteSearch(t *testing.T) {
 	testCases := []struct {
-		name       string
-		opts       Options
-		wantQuery  string
-		wantParams map[string]string
-		wantErr    error
+		name      string
+		opts      Options
+		expQuery  string
+		expParams map[string]string
+		expErr    error
 	}{
 		{
 			"SiteSearchSingleSiteSingleDevice",
@@ -84,23 +84,23 @@ func TestSiteSearch(t *testing.T) {
 			i := SWInv{Opts: tc.opts}
 			result, err := siteSearch(i)
 
-			if tc.wantErr == nil {
+			if tc.expErr == nil {
 				assert.NilError(t, err)
 			} else {
-				assert.ExpError(t, tc.wantErr)
+				assert.ExpError(t, tc.expErr)
 				return
 			}
 
 			query := result["query"].(string)
 			params := result["params"].(map[string]string)
 
-			assert.Equal(t, query, tc.wantQuery)
-			assert.Equal(t, len(params), len(tc.wantParams))
+			assert.Equal(t, query, tc.expQuery)
+			assert.Equal(t, len(params), len(tc.expParams))
 
 			for k, v := range params {
-				_, ok := tc.wantParams[k]
-				if !ok || v != tc.wantParams[k] {
-					t.Errorf("want %s, got %s", tc.wantParams, params)
+				_, ok := tc.expParams[k]
+				if !ok || v != tc.expParams[k] {
+					t.Errorf("got: %s, expected: %s", params, tc.expParams)
 				}
 			}
 

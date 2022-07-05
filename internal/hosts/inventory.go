@@ -95,6 +95,9 @@ func (i *HFInv) Get() (*HostList, error) {
 }
 
 func NewInventory(i string, o Options) (*Inventory, error) {
+	if i == "" {
+		return nil, ErrMissingInventoryType
+	}
 	switch i {
 	case "solarwinds":
 		return &Inventory{
