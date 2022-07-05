@@ -24,7 +24,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/rbraddev/holly/internal/hosts"
+	"github.com/rbraddev/holly-go/internal/hosts"
 	"github.com/spf13/cobra"
 )
 
@@ -80,17 +80,20 @@ func init() {
 }
 
 func enableDisableSiteAction(sites []string, enable bool) error {
-	sp := hosts.SearchParams{
-		SearchType: "siteSearch",
-		Sites:      sites,
-		Devices:    []string{"sw", "rt"},
+	opts := hosts.Options{
+		File: "hosts",
 	}
-	hl, err := hosts.NewSolarwindsHosts(sp)
+
+	i, err := hosts.NewInventory("file", opts)
+	if err != nil {
+		return err
+	}
+
+	hl, err := i.Module.Get()
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(hl)
-
 	return nil
 }

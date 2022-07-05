@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/rbraddev/holly/cmd"
+import "github.com/rbraddev/holly-go/cmd"
 
 func main() {
 	cmd.Execute()
