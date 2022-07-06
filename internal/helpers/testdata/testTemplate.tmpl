@@ -1,0 +1,4 @@
+{{range .vlans}}
+interface vlan {{.}}
+{{if $.enable}}  no shutdown{{else}}  shutdown{{end}}
+{{- end}}
