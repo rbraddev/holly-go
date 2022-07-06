@@ -96,7 +96,7 @@ func TestHostFileInventoryGet(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			opts := Options{File: tc.file}
+			opts := Options{File: tc.file, Username: "testuser", Password: "testpassword"}
 			i, err := NewInventory("file", opts)
 			if err != nil {
 				t.Fatal(err)
@@ -113,6 +113,8 @@ func TestHostFileInventoryGet(t *testing.T) {
 
 			assert.Equal(t, len(hl.Hosts), len(tc.expHl.Hosts))
 			assert.Equal(t, fmt.Sprint(hl.Hosts), fmt.Sprint(tc.expHl.Hosts))
+			assert.Equal(t, hl.Username, "testuser")
+			assert.Equal(t, hl.Password, "testpassword")
 		})
 	}
 }

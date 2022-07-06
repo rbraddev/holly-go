@@ -22,9 +22,6 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/rbraddev/holly-go/internal/hosts"
 	"github.com/spf13/cobra"
 )
 
@@ -80,20 +77,15 @@ func init() {
 }
 
 func enableDisableSiteAction(sites []string, enable bool) error {
-	opts := hosts.Options{
-		File: "hosts",
-	}
+	// h := hosts.Host{
+	// 	Ip:       "10.0.0.1",
+	// 	Hostname: "10.0.0.2",
+	// }
 
-	i, err := hosts.NewInventory("file", opts)
-	if err != nil {
-		return err
-	}
+	// config, err := h.EnableDisableSite(true, []string{"10", "20", "30"})
+	// if err != nil {
+	// 	return err
+	// }
 
-	hl, err := i.Module.Get()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(hl)
 	return nil
 }

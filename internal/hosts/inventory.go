@@ -8,18 +8,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 )
 
-type Host struct {
-	Hostname string
-	Ip       string
-}
-
 type HostList struct {
-	Hosts []Host
+	Username string
+	Password string
+	Hosts    []Host
+	wg       *sync.WaitGroup
 }
 
 type Options struct {
+	Username   string
+	Password   string
 	SearchType string
 	Sites      []string
 	Devices    []string
@@ -90,6 +91,8 @@ func (i *HFInv) Get() (*HostList, error) {
 	defer f.Close()
 
 	hl := getFileHosts(f)
+	hl.Username = i.Opts.Username
+	hl.Password = i.Opts.Password
 
 	return &hl, nil
 }

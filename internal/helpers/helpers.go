@@ -2,7 +2,7 @@ package helpers
 
 import (
 	"bytes"
-	"fmt"
+	"io/fs"
 	"text/template"
 )
 
@@ -15,8 +15,8 @@ func In[T comparable](value T, checklist []T) bool {
 	return false
 }
 
-func ParseTemplate(f string, data map[string]any) (string, error) {
-	t, err := template.ParseFiles(fmt.Sprintf("%s", f))
+func ParseTemplate(dir fs.FS, f string, data map[string]any) (string, error) {
+	t, err := template.ParseFS(dir, f)
 	if err != nil {
 		return "", err
 	}

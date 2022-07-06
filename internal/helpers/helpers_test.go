@@ -17,18 +17,20 @@ interface vlan 20
 
 	testCases := []struct {
 		name         string
+		templateDir  string
 		templateFile string
 		templateData map[string]any
 		expResult    string
 		expErr       error
 	}{
-		{"ParseTemplateSuccess", "testdata/testTemplate.tmpl", ParseTemplateSuccessData, ParseTemplateSuccessExpResult, nil},
-		{"ParseTemplateNoFile", "testdata/noFile", nil, "", os.ErrNotExist},
+		{"ParseTemplateSuccess", "testdata", "testTemplate.tmpl", ParseTemplateSuccessData, ParseTemplateSuccessExpResult, nil},
+		{"ParseTemplateNoFile", "testdata", "bogus.tmpl", nil, "", os.ErrNotExist},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			templateStr, err := ParseTemplate(tc.templateFile, tc.templateData)
+			file := os.DirFS(tc.templateDir)
+			templateStr, err := ParseTemplate(file, tc.templateFile, tc.templateData)
 
 			if tc.expErr == nil {
 				assert.NilError(t, err)
