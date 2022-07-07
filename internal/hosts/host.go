@@ -10,6 +10,7 @@ type Host struct {
 	Hostname string
 	Ip       string
 	Driver   *network.Driver
+	Config   string
 }
 
 func (h *Host) SetDriver(u, p string) error {

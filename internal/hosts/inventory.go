@@ -12,10 +12,11 @@ import (
 )
 
 type HostList struct {
-	Username string
-	Password string
-	Hosts    []Host
-	wg       *sync.WaitGroup
+	Username     string
+	Password     string
+	Hosts        []Host
+	GlobalConfig string
+	wg           sync.WaitGroup
 }
 
 type Options struct {
